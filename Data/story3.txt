@@ -1,0 +1,41 @@
+CAN LANGUAGE MODELS SYSTEMATICALLY GENERALIZE?
+A model exhibits systematic generalization if it can apply learned rules compositionally beyond the
+specific configurations observed during training. This includes both solving problems built from
+disjoint primitives and solving problems that require deeper recursive application of the same rule.
+In our setting, this corresponds to generating valid shortest paths in previously unseen maps (spatial
+transfer) and generating valid shortest paths of greater lengths than those seen during training (length
+scaling). We begin by presenting the high-level generalization behavior under the strongest training
+configuration (Figure 1), and defer a detailed breakdown of training data and paradigm choices to
+later sections. Specifically, the model is evaluated on maps not used during shortest-path training
+to assess spatial transfer (blue bars). For length scaling, we evaluate both the training map (red
+bars) and unseen maps (orange bars) on start–end pairs whose shortest paths are longer than those
+observed during training. We observe that language models achieve consistently high success rates
+(above 90%) on spatial transfer (blue bars), but performance degrades sharply under length scaling,
+regardless of whether spatial transfer is present (orange bars) or not (red bars).
+This length scaling failure is surprising. Intuitively, if a model can reliably solve smaller problems
+(i.e., shorter paths), one might expect it to decompose a larger problem into small segments to solve.
+We thus consider two possible explanations:
+• Hardness accumulation. As shorter paths are not perfectly solved (i.e., ID length success rate ̸=
+100%), longer paths may fail simply because they are more likely to contain difficult subproblems.
+• Recursive instability. Even when shorter segments are individually solvable, the model may fail
+to stably compose them under longer recursive generation.
+To disentangle these effects, we decompose long-path success rates, Pr(Long). For each test path of
+length exceeding training length, we split it into two subpaths, Sub1 and Sub2, each within training
+length. Then, by the law of total probability,
+Pr(Long) = Pr(Long |Sub1 ∧Sub2) Pr(Sub1 ∧Sub2) + Pr(Long,,¬(Sub1 ∧Sub2)).
+Here, Pr(Sub1 ∧Sub2) is the probability that both subpaths are solved correctly, while Pr(Long |
+Sub1 ∧Sub2) measures the probability of correctly generating the full path when both subpaths
+are individually solvable. Results in Table 1 show that the complementary term Pr(Long, ¬(Sub1 ∧
+Sub2)) is small and relatively stable across length groups, compared to the dominant term Pr(Long |
+Sub1 ∧Sub2) Pr(Sub1 ∧Sub2). Focusing on the dominant term, we observe that Pr(Sub1 ∧Sub2) ≈
+Pr(Sub)2. That is, hardness accumulation arises primarily as a multiplicative probability effect
+from imperfect subpath performance. Given the high subpath performance, the resulting decrease
+in Pr(Sub1 ∧Sub2) is modest as length increases (0.846 → 0.796). In contrast, the drop in
+Pr(Long | Sub1 ∧Sub2) is substantially larger (0.811 → 0.589), showing that length scaling
+failure is dominated by compositional instability.
+Takeaway 1: Language models exhibit systematic spatial generalization on composable SOPs,
+but this success does not extend to length scaling: even if a model can solve smaller instances, it
+struggles to stably compose them to solve larger ones.
+4
+Published as a conference paper at ICLR 2026
+In the following sections, we analyze how trainin
